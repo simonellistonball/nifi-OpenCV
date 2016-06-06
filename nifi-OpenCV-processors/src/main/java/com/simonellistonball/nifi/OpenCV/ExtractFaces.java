@@ -5,8 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import nu.pattern.OpenCV;
@@ -130,6 +132,15 @@ public class ExtractFaces extends AbstractProcessor {
                                         out.write(buf.toArray());
                                     }
                                 });
+                                
+                                // add the face location attributes
+                                Map<String, String> attributes = new HashMap<String,String>();
+                                attributes.put("face.x", String.valueOf(face.x));
+                                attributes.put("face.y", String.valueOf(face.y));
+                                attributes.put("face.w", String.valueOf(face.width));
+                                attributes.put("face.h", String.valueOf(face.height));
+                                faceFlowFile = session.putAllAttributes(faceFlowFile, attributes);
+                                
                                 splits.add(faceFlowFile);
                             }
                         }
