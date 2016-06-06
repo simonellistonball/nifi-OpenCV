@@ -123,7 +123,6 @@ public class ExtractFaces extends AbstractProcessor {
                             for (Rect face : list) {
                                 final Mat faceFile = inputImage.submat(face);
                                 FlowFile faceFlowFile = session.create(flowFile);
-                                session.getProvenanceReporter().create(faceFlowFile);
                                 faceFlowFile = session.write(faceFlowFile, new OutputStreamCallback() {
                                     @Override
                                     public void process(OutputStream out) throws IOException {
