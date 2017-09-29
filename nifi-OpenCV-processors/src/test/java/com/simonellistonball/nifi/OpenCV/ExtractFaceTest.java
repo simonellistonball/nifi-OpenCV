@@ -42,13 +42,13 @@ public class ExtractFaceTest {
     }
 
     private void runTest(String image) {
-
         String face_cascade_path = ExtractFaceTest.class.getResource(face_cascade_name).getPath();
-
         testRunner.setProperty(ExtractFaces.CASCADER, face_cascade_path);
         InputStream resourceAsStream = ExtractFaces.class.getResourceAsStream(image);
         testRunner.enqueue(resourceAsStream);
         testRunner.run();
     }
 
+    	// TODO - write a test for the faces relation
+    
 }

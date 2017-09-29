@@ -17,6 +17,7 @@
 package com.simonellistonball.nifi.OpenCV;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,11 +46,11 @@ import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.io.OutputStreamCallback;
 import org.apache.nifi.processor.util.StandardValidators;
-import org.apache.nifi.stream.io.ByteArrayInputStream;
 import org.opencv.core.Core;
 import org.opencv.core.MatOfByte;
-import org.opencv.highgui.Highgui;
-import org.opencv.highgui.VideoCapture;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 
 @Tags({ "image" })
 @CapabilityDescription("Extract a frame from the camera")
@@ -113,10 +114,10 @@ public class GetCameraFrame extends AbstractProcessor {
 	public void onScheduled(final ProcessContext context) {
 		double width = context.getProperty(FRAME_WIDTH).asDouble()
 				.doubleValue();
-		camera.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, width);
+		camera.set(Videoio.CAP_PROP_FRAME_WIDTH, width);
 		double height = context.getProperty(FRAME_HEIGHT).asDouble()
 				.doubleValue();
-		camera.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, height);
+		camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, height);
 	}
 
 	@Override
@@ -126,7 +127,7 @@ public class GetCameraFrame extends AbstractProcessor {
 		MatOfByte bytemat = new MatOfByte();
 
 		camera.read(image);
-		Highgui.imencode(".png", image, bytemat);
+		Imgcodecs.imencode(".png", image, bytemat);
 		byte[] bytes = bytemat.toArray();
 
 		InputStream in = new ByteArrayInputStream(bytes);

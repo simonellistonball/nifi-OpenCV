@@ -19,18 +19,17 @@
     <parent>
         <groupId>com.simonellistonball.nifi</groupId>
         <artifactId>OpenCV</artifactId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>nifi-OpenCV-nar</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
     <packaging>nar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.simonellistonball.nifi</groupId>
             <artifactId>nifi-OpenCV-processors</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

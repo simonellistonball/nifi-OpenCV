@@ -1,5 +1,6 @@
 package com.simonellistonball.nifi.OpenCV;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import nu.pattern.OpenCV;
 
@@ -30,15 +32,13 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.io.InputStreamCallback;
 import org.apache.nifi.processor.io.OutputStreamCallback;
 import org.apache.nifi.processor.util.StandardValidators;
-import org.apache.nifi.stream.io.BufferedInputStream;
-import org.apache.nifi.util.ObjectHolder;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -100,8 +100,8 @@ public class ExtractFaces extends AbstractProcessor {
 
         final FlowFile flowFile = session.get();
 
-        final ObjectHolder<Throwable> error = new ObjectHolder<>(null);
-        final ObjectHolder<List<Rect>> value = new ObjectHolder<>(null);
+        final AtomicReference<Throwable> error = new AtomicReference<>(null);
+        final AtomicReference<List<Rect>> value = new AtomicReference<>(null);
 
         final List<FlowFile> splits = new ArrayList<>();
 
@@ -110,7 +110,7 @@ public class ExtractFaces extends AbstractProcessor {
             public void process(final InputStream rawIn) throws IOException {
                 try (final InputStream in = new BufferedInputStream(rawIn)) {
                     byte[] temporaryImageInMemory = IOUtils.toByteArray(in);
-                    Mat outputImage = Highgui.imdecode(new MatOfByte(temporaryImageInMemory), Highgui.IMREAD_GRAYSCALE);
+                    Mat outputImage = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory), Imgcodecs.IMREAD_GRAYSCALE);
                     MatOfRect faces = new MatOfRect();
                     Imgproc.equalizeHist(outputImage, outputImage);
                     face_cascade.detectMultiScale(outputImage, faces, 1.1, 2, 0, new Size(30, 30), new Size());
@@ -118,7 +118,7 @@ public class ExtractFaces extends AbstractProcessor {
                     value.set(list);
                     if (extractFaces) {
                         // send out the original colour image, not the grayscale one used to cascade.
-                        Mat inputImage = Highgui.imdecode(new MatOfByte(temporaryImageInMemory), Highgui.IMREAD_UNCHANGED);
+                        Mat inputImage = Imgcodecs.imdecode(new MatOfByte(temporaryImageInMemory), Imgcodecs.IMREAD_UNCHANGED);
                         if (list.size() > 0) {
                             for (Rect face : list) {
                                 final Mat faceFile = inputImage.submat(face);
@@ -127,7 +127,7 @@ public class ExtractFaces extends AbstractProcessor {
                                     @Override
                                     public void process(OutputStream out) throws IOException {
                                         MatOfByte buf = new MatOfByte();
-                                        Highgui.imencode(".png", faceFile, buf);
+                                        Imgcodecs.imencode(".png", faceFile, buf);
                                         out.write(buf.toArray());
                                     }
                                 });
@@ -156,10 +156,8 @@ public class ExtractFaces extends AbstractProcessor {
             session.transfer(flowFile, REL_UNMATCH);
             session.remove(splits);
         } else {
-            // TODO if the split faces relation is connected, send each face
-            // matrix to this as a separate FlowFile
-            // FlowFile newFlowFile = session.putAttribute(flowFile, "faces.count", String.valueOf(list.size()));
-            session.transfer(flowFile, REL_MATCH);
+            FlowFile newFlowFile = session.putAttribute(flowFile, "faces.count", String.valueOf(list.size()));
+            session.transfer(newFlowFile, REL_MATCH);
             session.transfer(splits, REL_FACES);
         }
     }
