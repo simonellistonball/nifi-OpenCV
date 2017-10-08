@@ -33,6 +33,17 @@ public class ExtractFaceTest {
             flowFile.assertAttributeEquals("faces.count", "1");
         }
     }
+    
+    @Test
+    public void testMarksFace() {
+    		testRunner.setProperty(ExtractFaces.MARK_FACES, "true");
+        runTest(face_resource_path);
+        testRunner.assertAllFlowFilesTransferred(ExtractFaces.REL_MATCH);
+        List<MockFlowFile> flowFilesForRelationship = testRunner.getFlowFilesForRelationship(ExtractFaces.REL_MATCH);
+        for (MockFlowFile flowFile : flowFilesForRelationship) {
+            flowFile.assertAttributeEquals("faces.count", "1");
+        }
+    }
 
     @Test
     public void testNoFace() {
